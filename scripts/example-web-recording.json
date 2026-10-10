@@ -1,0 +1,26 @@
+{
+  "manga": "Blue Lock",
+  "title": "Our Blue Lock egoist ranking #shorts",
+  "description": "Our fan ranking of the top 5 egoists in Blue Lock. Agree?\nRead Blue Lock officially on K MANGA.",
+  "hashtags": ["shorts", "bluelock", "isagi", "rin", "manga"],
+  "scenes": [
+    {
+      "type": "chat",
+      "question": "Who is the biggest egoist in Blue Lock?",
+      "answer": "We ranked the top five. Look.",
+      "on_screen": "Biggest egoist?",
+      "voice": "Who is the biggest egoist in Blue Lock? We ranked the top five. Look."
+    },
+    {
+      "type": "web",
+      "url": "examples/fan-page.html",
+      "on_screen": "Our top 5 ranking",
+      "voice": "Number five, Barou, the king. Four, Nagi. Three, Bachira and his monster. Two, Rin. And number one, Isagi, who reads the field like a puzzle."
+    },
+    {
+      "type": "card",
+      "on_screen": "Read Blue Lock officially on K MANGA",
+      "voice": "Read Blue Lock officially on K MANGA, and follow for more Blue Lock breakdowns!"
+    }
+  ]
+}

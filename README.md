@@ -4,6 +4,7 @@ One command makes one vertical YouTube Short (1080×1920, ~30–40 s) with:
 - a **chat hook** (a viewer asks "Manga Bot" a question, the bot answers)
 - fast **text cards** (rankings, theories, moments)
 - **your own recordings** (screen or phone videos) with the AI voice over them
+- **automatic web page recordings**: a browser opens a page in phone size, scrolls it and records it
 - **AI voice**: [OmniVoice](https://github.com/k2-fsa/OmniVoice) (open source, runs on your PC; default) or Microsoft Edge TTS (free, online)
 - **background music** (random track from `assets/music/`)
 - a ready **title, description and hashtags** in `upload.txt`
@@ -11,7 +12,7 @@ One command makes one vertical YouTube Short (1080×1920, ~30–40 s) with:
 ## Setup (once)
 
 1. Install Python 3.10+ and FFmpeg (https://ffmpeg.org/download.html).
-2. `pip install -r requirements.txt`
+2. `pip install -r requirements.txt` then `playwright install chromium` (the browser for web scenes)
 3. Install OmniVoice (the default voice). Its code is already inside this project in
    `vendor/OmniVoice` (git submodule):
    - Get the code: clone with `git clone --recursive <this repo>`, or in an existing clone run
@@ -45,6 +46,9 @@ python make_short.py "Luffy's best fights" --manga "One Piece"
 
 # With your own recording (put it in assets/videos/ first)
 python make_short.py --script scripts/example-with-recording.json
+
+# With an automatic browser recording of a web page
+python make_short.py --script scripts/example-web-recording.json
 ```
 
 The result is in `output/<topic>/`:
@@ -63,8 +67,11 @@ See the files in `scripts/`. Each scene is one of:
   `video_start` (second to start from) and `video_fit`: `"fit"` (whole video on a blurred
   background, best for screen recordings) or `"fill"` (zoomed, best for vertical phone videos).
   The recording loops if it's shorter than the voice line.
+- `"type": "web"` with `url` (a web address, or a local `.html` file), `on_screen`, `voice`, optional
+  `scroll_px` (how far to scroll; default = the whole page, 0 = no scroll). The program opens the page in
+  a phone-sized browser, scrolls it smoothly for as long as the voice line lasts, and uses that recording.
 
-The AI only writes chat and card scenes. Add video scenes yourself: run with `--script-only`,
+The AI only writes chat and card scenes. Add video and web scenes yourself: run with `--script-only`,
 add a video scene to `script.json`, then render it with `--script`.
 
 ## Settings (`config.json`)
@@ -75,6 +82,7 @@ add a video scene to `script.json`, then render it with `--script`.
 | `manga` | label at the top, and the topic the AI writes about |
 | `cta_on_screen`, `cta_voice` | the last scene (call to action) |
 | `voice_engine` | `omnivoice` (default), `edge`, `espeak` (offline robot voice, for testing), or `silent` |
+| `browser_path` | leave empty; or the path to a Chrome/Chromium to use for web scenes |
 | `manga`, `official_sources` | default manga, and the official app named in the last scene for each manga |
 | `omnivoice_instruct` | Voice design: comma list of gender (`male`/`female`), age (`child`, `teenager`, `young adult`, `middle-aged`, `elderly`), pitch (`very low pitch` … `very high pitch`), accent (`american accent`, `british accent`, …), `whisper` |
 | `omnivoice_ref_audio`, `omnivoice_ref_text` | Clone a voice instead: path to a 3–10 s clean recording of **your own voice** (+ what you say in it; leave text empty to auto-transcribe). Overrides `omnivoice_instruct` |
@@ -96,6 +104,7 @@ python -m pytest tests
 ## Stay safe on YouTube
 
 - Use your own words and your own/licensed images — not manga page scans.
+- Only record web pages you're allowed to show (your own site, official pages, wikis/news) — never pirate reading sites.
 - Point viewers to official reading (K MANGA / Kodansha) or your own channel.
 - Only use music you have the rights to.
 - Only clone your own voice (or a voice you have permission to use).

@@ -212,6 +212,16 @@ def render(script: ShortScript, cfg: dict, workdir: Path, out_path: Path, music=
             draw_chat(scene, cfg, i, total, show_answer=True).save(b)
             split = seconds * 0.4
             segments += [dict(png=a, seconds=split, zoom=False), dict(png=b, seconds=seconds - split, zoom=False)]
+        elif scene.type == "web":
+            if not scene.url:
+                raise ValueError(f"Scene {i + 1} is a web scene but has no url")
+            from .browser import record_page
+
+            print(f"    recording {scene.url}")
+            rec = record_page(scene.url, seconds, workdir / f"web_{i:02d}.mp4", cfg, scene.scroll_px)
+            png = workdir / f"scene_{i:02d}_overlay.png"
+            draw_video_overlay(scene, cfg, i, total).save(png)
+            segments.append(dict(png=png, seconds=seconds, video=rec, start=0.0, fit="fill"))
         elif scene.type == "video":
             png = workdir / f"scene_{i:02d}_overlay.png"
             draw_video_overlay(scene, cfg, i, total).save(png)

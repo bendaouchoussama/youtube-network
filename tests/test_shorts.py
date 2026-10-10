@@ -154,3 +154,37 @@ def test_espeak_voice_is_not_silent(tmp_path):
                          capture_output=True, text=True).stderr
     max_db = float(vol.split("max_volume:")[1].split("dB")[0])
     assert max_db > -30
+
+
+def _browser_path():
+    path = Path("/opt/pw-browsers/chromium")  # cloud test machine; empty = Playwright's own browser
+    return str(path) if path.exists() else ""
+
+
+@pytest.mark.skipif(not shutil.which("ffmpeg"), reason="ffmpeg missing")
+def test_web_scene_records_scrolling_page(tmp_path):
+    pytest.importorskip("playwright")
+    page = tmp_path / "page.html"
+    page.write_text("<body style='margin:0'>" + "".join(
+        f"<div style='height:400px;background:hsl({i * 40},70%,50%)'>{i}</div>" for i in range(10)) + "</body>")
+    script = ShortScript.model_validate({
+        "manga": "Blue Lock", "title": "t #shorts", "description": "d", "hashtags": [],
+        "scenes": [{"type": "web", "url": str(page), "on_screen": "Scroll", "voice": "x"}],
+    })
+    cfg = dict(load_config(CONFIG), voice_engine="silent", browser_path=_browser_path())
+    out = render(script, cfg, tmp_path / "work", tmp_path / "web.mp4")
+    info = probe(out)
+    video = next(s for s in info["streams"] if s["codec_type"] == "video")
+    assert (video["width"], video["height"]) == (1080, 1920)
+    frames = sorted((tmp_path / "work" / "web_00").glob("f_*.png"))
+    assert len(frames) > 10
+    assert frames[0].read_bytes() != frames[-1].read_bytes()  # the page actually scrolled
+
+
+def test_web_scene_needs_url(tmp_path):
+    script = ShortScript.model_validate({
+        "title": "t", "description": "d", "hashtags": [],
+        "scenes": [{"type": "web", "on_screen": "x", "voice": "x"}],
+    })
+    with pytest.raises(ValueError, match="no url"):
+        render(script, dict(load_config(CONFIG), voice_engine="silent"), tmp_path / "w", tmp_path / "x.mp4")

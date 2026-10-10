@@ -10,7 +10,8 @@ class Scene(BaseModel):
     # "chat": a question bubble and a bot answer bubble (the hook).
     # "card": big on-screen text over a background (or your own image).
     # "video": your own screen/phone recording, with the voice and caption on top.
-    type: Literal["chat", "card", "video"]
+    # "web": the program opens `url` in a phone-sized browser and records it scrolling.
+    type: Literal["chat", "card", "video", "web"]
     voice: str = Field(description="What the AI voice says in this scene. 1-2 short sentences.")
     on_screen: str = Field(description="Big text shown on screen. Max ~12 words.")
     question: Optional[str] = Field(default=None, description="Chat scenes only: the viewer's question.")
@@ -18,6 +19,8 @@ class Scene(BaseModel):
     image: Optional[str] = Field(default=None, description="Leave empty. Path to your own image (fan art you made, licensed art).")
     video: Optional[str] = Field(default=None, description="Leave empty. Video scenes only: path to your own recording.")
     video_start: float = Field(default=0.0, description="Video scenes only: second to start the recording from.")
+    url: Optional[str] = Field(default=None, description="Leave empty. Web scenes only: page to record.")
+    scroll_px: Optional[int] = Field(default=None, description="Web scenes only: pixels to scroll (default whole page).")
     video_fit: Literal["fit", "fill"] = Field(default="fit", description="Video scenes only: fit (whole video) or fill (zoom).")
 
 
@@ -38,7 +41,7 @@ Rules:
 - The last scene is type "card" with on_screen exactly "{cta_on_screen}" and voice exactly "{cta_voice}".
 - Write original commentary, rankings and analysis. Never quote long passages of the manga and never tell viewers to read it on unofficial or pirate sites.
 - Plain English, short sentences, written to be spoken aloud.
-- Only use types "chat" and "card" (never "video"). Leave "image" and "video" empty."""
+- Only use types "chat" and "card" (never "video" or "web"). Leave "image", "video" and "url" empty."""
 
 
 def load_script(path: Path) -> ShortScript:

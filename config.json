@@ -28,6 +28,7 @@
   "omnivoice_model": "k2-fsa/OmniVoice",
   "espeak_voice": "en-us",
   "espeak_speed": 165,
+  "browser_path": "",
   "music_dir": "assets/music",
   "music_volume": 0.12,
   "accent_color": "#1E6BFF",
