@@ -11,12 +11,16 @@ One command makes one vertical YouTube Short (1080×1920, ~30–40 s) with:
 
 1. Install Python 3.10+ and FFmpeg (https://ffmpeg.org/download.html).
 2. `pip install -r requirements.txt`
-3. Install OmniVoice (the default voice):
+3. Install OmniVoice (the default voice). Its code is already inside this project in
+   `vendor/OmniVoice` (git submodule):
+   - Get the code: clone with `git clone --recursive <this repo>`, or in an existing clone run
+     `git submodule update --init`
    - Install PyTorch for your computer: https://pytorch.org/get-started/locally/
      (NVIDIA GPU is fastest; Apple Silicon and plain CPU also work, CPU is slower)
-   - `pip install omnivoice`
-   - The first video downloads the model from Hugging Face (a few GB, one time only).
+   - `pip install -e vendor/OmniVoice`
+   - The first video downloads the voice model from Hugging Face (a few GB, one time only).
    - No GPU / too slow? Set `"voice_engine": "edge"` in `config.json`.
+   - Update OmniVoice later: `git submodule update --remote vendor/OmniVoice`
 4. Add music files to `assets/music/` (YouTube Audio Library is safe).
 5. For AI-written scripts, set your Claude API key: `export ANTHROPIC_API_KEY=...`
    (Windows: `set ANTHROPIC_API_KEY=...`).

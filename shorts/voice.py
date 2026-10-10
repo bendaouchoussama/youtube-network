@@ -2,7 +2,10 @@
 
 import asyncio
 import subprocess
+import sys
 from pathlib import Path
+
+VENDOR_DIR = Path(__file__).resolve().parent.parent / "vendor" / "OmniVoice"
 
 
 def audio_duration(path: Path) -> float:
@@ -27,7 +30,13 @@ def _omnivoice_model(cfg: dict):
     """Load OmniVoice once per run (first run downloads the model from Hugging Face)."""
     if "model" not in _omnivoice:
         import torch
-        from omnivoice import OmniVoice
+
+        try:
+            from omnivoice import OmniVoice
+        except ImportError:
+            # Use the copy bundled in vendor/OmniVoice (git submodule).
+            sys.path.insert(0, str(VENDOR_DIR))
+            from omnivoice import OmniVoice
 
         device = cfg.get("omnivoice_device", "auto")
         if device == "auto":
@@ -39,9 +48,17 @@ def _omnivoice_model(cfg: dict):
                 device = "cpu"
         dtype = torch.float32 if device == "cpu" else torch.float16
         print(f"  loading OmniVoice on {device}...")
-        _omnivoice["model"] = OmniVoice.from_pretrained(
-            cfg.get("omnivoice_model", "k2-fsa/OmniVoice"), device_map=device, dtype=dtype
-        )
+        try:
+            _omnivoice["model"] = OmniVoice.from_pretrained(
+                cfg.get("omnivoice_model", "k2-fsa/OmniVoice"), device_map=device, dtype=dtype
+            )
+        except Exception as exc:
+            raise SystemExit(
+                f"\nCould not load the OmniVoice model: {exc}\n"
+                "- The first run downloads it from Hugging Face: check your internet connection.\n"
+                "- If Hugging Face is blocked for you, run: export HF_ENDPOINT=https://hf-mirror.com\n"
+                "- Or set \"voice_engine\": \"edge\" in config.json to use Edge TTS instead."
+            ) from exc
     return _omnivoice["model"]
 
 
