@@ -3,7 +3,7 @@
 One command makes one vertical YouTube Short (1080×1920, ~30–40 s) with:
 - a **chat hook** (a viewer asks "Manga Bot" a question, the bot answers)
 - fast **text cards** (rankings, theories, moments)
-- **AI voice** (Microsoft Edge TTS, free)
+- **AI voice**: [OmniVoice](https://github.com/k2-fsa/OmniVoice) (open source, runs on your PC; default) or Microsoft Edge TTS (free, online)
 - **background music** (random track from `assets/music/`)
 - a ready **title, description and hashtags** in `upload.txt`
 
@@ -11,10 +11,16 @@ One command makes one vertical YouTube Short (1080×1920, ~30–40 s) with:
 
 1. Install Python 3.10+ and FFmpeg (https://ffmpeg.org/download.html).
 2. `pip install -r requirements.txt`
-3. Add music files to `assets/music/` (YouTube Audio Library is safe).
-4. For AI-written scripts, set your Claude API key: `export ANTHROPIC_API_KEY=...`
+3. Install OmniVoice (the default voice):
+   - Install PyTorch for your computer: https://pytorch.org/get-started/locally/
+     (NVIDIA GPU is fastest; Apple Silicon and plain CPU also work, CPU is slower)
+   - `pip install omnivoice`
+   - The first video downloads the model from Hugging Face (a few GB, one time only).
+   - No GPU / too slow? Set `"voice_engine": "edge"` in `config.json`.
+4. Add music files to `assets/music/` (YouTube Audio Library is safe).
+5. For AI-written scripts, set your Claude API key: `export ANTHROPIC_API_KEY=...`
    (Windows: `set ANTHROPIC_API_KEY=...`).
-5. Edit `config.json`: channel name, `@handle`, voice, colors.
+6. Edit `config.json`: channel name, `@handle`, voice, colors.
 
 ## Make a video
 
@@ -50,7 +56,13 @@ See `scripts/isagi-top-moments.json`. Each scene is either:
 | `channel_name`, `handle` | shown at the bottom of every frame |
 | `manga` | label at the top, and the topic the AI writes about |
 | `cta_on_screen`, `cta_voice` | the last scene (call to action) |
-| `voice`, `voice_rate` | Edge TTS voice, e.g. `en-US-GuyNeural`, `en-US-AriaNeural`, `en-GB-RyanNeural` |
+| `voice_engine` | `omnivoice` (default), `edge`, or `silent` |
+| `omnivoice_instruct` | Voice design: comma list of gender (`male`/`female`), age (`child`, `teenager`, `young adult`, `middle-aged`, `elderly`), pitch (`very low pitch` … `very high pitch`), accent (`american accent`, `british accent`, …), `whisper` |
+| `omnivoice_ref_audio`, `omnivoice_ref_text` | Clone a voice instead: path to a 3–10 s clean recording of **your own voice** (+ what you say in it; leave text empty to auto-transcribe). Overrides `omnivoice_instruct` |
+| `omnivoice_speed` | 1.0 normal, 1.1–1.2 good for Shorts |
+| `omnivoice_steps` | 32 best quality, 16 faster |
+| `omnivoice_device` | `auto`, `cuda:0`, `mps`, or `cpu` |
+| `voice`, `voice_rate` | Edge TTS only, e.g. `en-US-GuyNeural`, `en-GB-RyanNeural` |
 | `music_volume` | 0.05 (quiet) – 0.3 (loud) |
 | `accent_color`, `background_color`, `text_color` | colors |
 | `target_seconds` | how long the AI aims for |
@@ -60,3 +72,4 @@ See `scripts/isagi-top-moments.json`. Each scene is either:
 - Use your own words and your own/licensed images — not manga page scans.
 - Point viewers to official reading (K MANGA / Kodansha) or your own channel.
 - Only use music you have the rights to.
+- Only clone your own voice (or a voice you have permission to use).

@@ -163,9 +163,9 @@ def render(script: ShortScript, cfg: dict, workdir: Path, out_path: Path, music=
 
     for i, scene in enumerate(script.scenes):
         print(f"  scene {i + 1}/{total}: {scene.type} - {scene.on_screen[:50]}")
-        mp3 = workdir / f"voice_{i:02d}.mp3"
-        seconds = speak(scene.voice, mp3, cfg) + PAD_SECONDS
-        voices.append((mp3, seconds))
+        audio, seconds = speak(scene.voice, workdir / f"voice_{i:02d}", cfg)
+        seconds += PAD_SECONDS
+        voices.append((audio, seconds))
         if scene.type == "chat":
             a, b = workdir / f"scene_{i:02d}a.png", workdir / f"scene_{i:02d}b.png"
             draw_chat(scene, cfg, i, total, show_answer=False).save(a)
@@ -189,8 +189,8 @@ def render(script: ShortScript, cfg: dict, workdir: Path, out_path: Path, music=
 
     # Voice track: each line padded to its scene length so it stays in sync.
     voice_inputs, parts = [], []
-    for k, (mp3, seconds) in enumerate(voices):
-        voice_inputs += ["-i", str(mp3)]
+    for k, (audio, seconds) in enumerate(voices):
+        voice_inputs += ["-i", str(audio)]
         parts.append(f"[{k}:a]aresample=44100,apad,atrim=0:{seconds:.3f}[v{k}]")
     labels = "".join(f"[v{k}]" for k in range(len(voices)))
     voice = workdir / "voice.wav"

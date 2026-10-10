@@ -2,3 +2,4 @@ anthropic>=1.13
 pydantic>=2
 pillow>=10
 edge-tts>=6
+soundfile>=0.12
