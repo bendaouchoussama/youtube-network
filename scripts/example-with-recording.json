@@ -1,0 +1,32 @@
+{
+  "manga": "Blue Lock",
+  "title": "Blue Lock chapter talk: my reaction #shorts",
+  "description": "My quick reaction to the latest Blue Lock chapter. What did you think?\nRead Blue Lock officially on K MANGA.",
+  "hashtags": ["shorts", "bluelock", "manga", "reaction"],
+  "scenes": [
+    {
+      "type": "chat",
+      "question": "Is the new Blue Lock chapter worth it?",
+      "answer": "Watch my reaction and decide.",
+      "on_screen": "New chapter: worth it?",
+      "voice": "Is the new Blue Lock chapter worth it? Watch my reaction and decide."
+    },
+    {
+      "type": "video",
+      "video": "assets/videos/my-recording.mp4",
+      "video_start": 0,
+      "on_screen": "My honest reaction",
+      "voice": "Here is my honest reaction. The pacing in this match is insane, and Isagi is finally thinking like a true egoist."
+    },
+    {
+      "type": "card",
+      "on_screen": "Rate it 1 to 10 in the comments!",
+      "voice": "Rate it from one to ten in the comments!"
+    },
+    {
+      "type": "card",
+      "on_screen": "Read Blue Lock officially on K MANGA",
+      "voice": "Read Blue Lock officially on K MANGA, and follow for more Blue Lock breakdowns!"
+    }
+  ]
+}

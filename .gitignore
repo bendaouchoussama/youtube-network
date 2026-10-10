@@ -4,3 +4,5 @@ __pycache__/
 .venv/
 assets/music/*
 !assets/music/README.md
+assets/videos/*
+!assets/videos/README.md

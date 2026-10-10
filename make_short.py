@@ -4,14 +4,15 @@
   python make_short.py "Top 5 Isagi goals"            # AI writes the script, then renders
   python make_short.py "Top 5 Isagi goals" --script-only   # only write the script to edit first
   python make_short.py --script scripts/isagi-top-moments.json   # render a script you wrote/edited
+  python make_short.py "Luffy's best fights" --manga "One Piece"  # any manga
 """
 
 import argparse
-import json
 import re
 import sys
 from pathlib import Path
 
+from shorts.config import load_config
 from shorts.render import render
 from shorts.script import generate_script, load_script, save_script
 
@@ -27,6 +28,7 @@ def main() -> int:
     p.add_argument("topic", nargs="?", help="What the Short is about, e.g. \"Why Rin hates Isagi\"")
     p.add_argument("--script", help="Render this script JSON instead of asking the AI")
     p.add_argument("--script-only", action="store_true", help="Write the AI script and stop (edit it, then use --script)")
+    p.add_argument("--manga", help="Which manga (default: \"manga\" in config.json)")
     p.add_argument("--music", help="Use this music file instead of a random one from assets/music/")
     p.add_argument("--config", default=str(ROOT / "config.json"))
     p.add_argument("--silent", action="store_true", help="No voice (offline preview of the visuals and timing)")
@@ -35,17 +37,18 @@ def main() -> int:
     if not args.topic and not args.script:
         p.error("give a topic or --script FILE")
 
-    cfg = json.loads(Path(args.config).read_text(encoding="utf-8"))
+    script = load_script(Path(args.script)) if args.script else None
+    cfg = load_config(Path(args.config), args.manga or (script and script.manga))
     if args.silent:
         cfg["voice_engine"] = "silent"
 
-    if args.script:
-        script = load_script(Path(args.script))
+    if script:
+        script.manga = cfg["manga"]
         slug = slugify(Path(args.script).stem)
     else:
-        print(f"Writing script for: {args.topic}")
+        print(f"Writing a {cfg['manga']} script for: {args.topic}")
         script = generate_script(args.topic, cfg)
-        slug = slugify(args.topic)
+        slug = slugify(f"{cfg['manga']} {args.topic}")
 
     out_dir = ROOT / "output" / slug
     out_dir.mkdir(parents=True, exist_ok=True)

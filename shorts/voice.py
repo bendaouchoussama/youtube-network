@@ -82,6 +82,12 @@ def _omnivoice_tts(text: str, cfg: dict, out: Path) -> None:
     sf.write(str(out), audio[0], model.sampling_rate or 24000)
 
 
+def _espeak(text: str, cfg: dict, out: Path) -> None:
+    # Offline robot-style voice (install: apt install espeak-ng / brew install espeak-ng).
+    subprocess.run(["espeak-ng", "-v", cfg.get("espeak_voice", "en-us"), "-s", str(cfg.get("espeak_speed", 165)),
+                    "-w", str(out), text], check=True)
+
+
 def _silence(text: str, out: Path) -> None:
     # Offline preview: silent track as long as the line would take to say (~2.6 words/sec).
     seconds = max(1.5, len(text.split()) / 2.6)
@@ -95,6 +101,7 @@ def _silence(text: str, out: Path) -> None:
 ENGINES = {
     "edge": (_edge_tts, ".mp3"),
     "omnivoice": (_omnivoice_tts, ".wav"),
+    "espeak": (_espeak, ".wav"),
     "silent": (lambda text, cfg, out: _silence(text, out), ".wav"),
 }
 

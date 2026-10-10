@@ -1,8 +1,9 @@
-# YouTube Shorts maker — Blue Lock fan channel
+# YouTube Shorts maker — manga fan channel (default: Blue Lock)
 
 One command makes one vertical YouTube Short (1080×1920, ~30–40 s) with:
 - a **chat hook** (a viewer asks "Manga Bot" a question, the bot answers)
 - fast **text cards** (rankings, theories, moments)
+- **your own recordings** (screen or phone videos) with the AI voice over them
 - **AI voice**: [OmniVoice](https://github.com/k2-fsa/OmniVoice) (open source, runs on your PC; default) or Microsoft Edge TTS (free, online)
 - **background music** (random track from `assets/music/`)
 - a ready **title, description and hashtags** in `upload.txt`
@@ -38,6 +39,12 @@ python make_short.py --script output/why-rin-hates-isagi/script.json
 
 # Render a script you wrote yourself (no API key needed)
 python make_short.py --script scripts/isagi-top-moments.json
+
+# Any manga (the last scene points to its official app, see "official_sources" in config.json)
+python make_short.py "Luffy's best fights" --manga "One Piece"
+
+# With your own recording (put it in assets/videos/ first)
+python make_short.py --script scripts/example-with-recording.json
 ```
 
 The result is in `output/<topic>/`:
@@ -49,9 +56,16 @@ The result is in `output/<topic>/`:
 
 ## Script format
 
-See `scripts/isagi-top-moments.json`. Each scene is either:
+See the files in `scripts/`. Each scene is one of:
 - `"type": "chat"` with `question`, `answer`, `on_screen`, `voice`
 - `"type": "card"` with `on_screen`, `voice`, and optional `image` (your own art)
+- `"type": "video"` with `video` (path to your recording), `on_screen`, `voice`, optional
+  `video_start` (second to start from) and `video_fit`: `"fit"` (whole video on a blurred
+  background, best for screen recordings) or `"fill"` (zoomed, best for vertical phone videos).
+  The recording loops if it's shorter than the voice line.
+
+The AI only writes chat and card scenes. Add video scenes yourself: run with `--script-only`,
+add a video scene to `script.json`, then render it with `--script`.
 
 ## Settings (`config.json`)
 
@@ -60,7 +74,8 @@ See `scripts/isagi-top-moments.json`. Each scene is either:
 | `channel_name`, `handle` | shown at the bottom of every frame |
 | `manga` | label at the top, and the topic the AI writes about |
 | `cta_on_screen`, `cta_voice` | the last scene (call to action) |
-| `voice_engine` | `omnivoice` (default), `edge`, or `silent` |
+| `voice_engine` | `omnivoice` (default), `edge`, `espeak` (offline robot voice, for testing), or `silent` |
+| `manga`, `official_sources` | default manga, and the official app named in the last scene for each manga |
 | `omnivoice_instruct` | Voice design: comma list of gender (`male`/`female`), age (`child`, `teenager`, `young adult`, `middle-aged`, `elderly`), pitch (`very low pitch` … `very high pitch`), accent (`american accent`, `british accent`, …), `whisper` |
 | `omnivoice_ref_audio`, `omnivoice_ref_text` | Clone a voice instead: path to a 3–10 s clean recording of **your own voice** (+ what you say in it; leave text empty to auto-transcribe). Overrides `omnivoice_instruct` |
 | `omnivoice_speed` | 1.0 normal, 1.1–1.2 good for Shorts |
@@ -70,6 +85,13 @@ See `scripts/isagi-top-moments.json`. Each scene is either:
 | `music_volume` | 0.05 (quiet) – 0.3 (loud) |
 | `accent_color`, `background_color`, `text_color` | colors |
 | `target_seconds` | how long the AI aims for |
+
+## Tests
+
+```bash
+pip install pytest
+python -m pytest tests
+```
 
 ## Stay safe on YouTube
 

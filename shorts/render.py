@@ -83,7 +83,8 @@ def _header_footer(draw, cfg, index, total):
     for i in range(total):
         fill = "white" if i == index else (95, 105, 140)
         draw.ellipse((x0 + i * gap - r, 290 - r, x0 + i * gap + r, 290 + r), fill=fill)
-    draw.text((W / 2, H - 170), cfg.get("handle", ""), font=_font(44, cfg), fill=(220, 225, 240), anchor="mm")
+    draw.text((W / 2, H - 170), cfg.get("handle", ""), font=_font(44, cfg), fill=(220, 225, 240), anchor="mm",
+              stroke_width=3, stroke_fill=(0, 0, 0))
 
 
 def draw_card(scene: Scene, cfg, index, total) -> Image.Image:
@@ -132,6 +133,23 @@ def draw_chat(scene: Scene, cfg, index, total, show_answer: bool) -> Image.Image
     return img.convert("RGB")
 
 
+def draw_video_overlay(scene: Scene, cfg, index, total) -> Image.Image:
+    """Transparent layer put on top of a video clip: header, footer and the caption."""
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img, "RGBA")
+    _header_footer(draw, cfg, index, total)
+    if scene.on_screen:
+        font, lines = _fit_text(draw, scene.on_screen, cfg, W - 200, max_lines=3, start=80, minimum=48)
+        line_h = font.size * 1.2
+        top = 360
+        draw.rounded_rectangle((60, top, W - 60, top + line_h * len(lines) + 50), radius=36, fill=(0, 0, 0, 170))
+        y = top + 25 + line_h / 2
+        for line in lines:
+            draw.text((W / 2, y), line, font=font, fill=cfg.get("text_color", "white"), anchor="mm")
+            y += line_h
+    return img
+
+
 def _run(args):
     subprocess.run(["ffmpeg", "-y", "-v", "error", *args], check=True)
 
@@ -146,6 +164,28 @@ def _still_clip(png: Path, seconds: float, out: Path, zoom: bool):
     else:
         _run(["-loop", "1", "-i", str(png), "-t", f"{frames / FPS:.3f}", "-r", str(FPS),
               "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out)])
+
+
+def _video_clip(video: Path, start: float, overlay: Path, seconds: float, out: Path, fit: str = "fit"):
+    """Put your recording in 9:16, loop it if it's shorter than the voice, add the overlay on top.
+
+    fit="fit": whole recording visible, centred on a blurred copy (best for screen recordings).
+    fit="fill": recording zoomed to fill the screen (best for vertical phone recordings).
+    """
+    if not Path(video).exists():
+        raise FileNotFoundError(f"Video not found: {video}")
+    frames = max(1, round(seconds * FPS))
+    cover = f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},setsar=1"
+    if fit == "fill":
+        base = f"[0:v]{cover},fps={FPS}[v]"
+    else:
+        base = (f"[0:v]fps={FPS},split[a][b];[a]{cover},boxblur=30:2,eq=brightness=-0.15[bg];"
+                f"[b]scale={W}:{H}:force_original_aspect_ratio=decrease,setsar=1[fg];"
+                f"[bg][fg]overlay=(W-w)/2:(H-h)/2[v]")
+    _run(["-ss", f"{start:.2f}", "-stream_loop", "-1", "-i", str(video), "-i", str(overlay),
+          "-filter_complex",
+          f"{base};[v][1:v]overlay=0:0,format=yuv420p[out]",
+          "-map", "[out]", "-an", "-frames:v", str(frames), "-c:v", "libx264", "-r", str(FPS), str(out)])
 
 
 def _pick_music(cfg, music_arg):
@@ -171,16 +211,24 @@ def render(script: ShortScript, cfg: dict, workdir: Path, out_path: Path, music=
             draw_chat(scene, cfg, i, total, show_answer=False).save(a)
             draw_chat(scene, cfg, i, total, show_answer=True).save(b)
             split = seconds * 0.4
-            segments += [(a, split, False), (b, seconds - split, False)]
+            segments += [dict(png=a, seconds=split, zoom=False), dict(png=b, seconds=seconds - split, zoom=False)]
+        elif scene.type == "video":
+            png = workdir / f"scene_{i:02d}_overlay.png"
+            draw_video_overlay(scene, cfg, i, total).save(png)
+            segments.append(dict(png=png, seconds=seconds, video=scene.video, start=scene.video_start,
+                                 fit=scene.video_fit))
         else:
             png = workdir / f"scene_{i:02d}.png"
             draw_card(scene, cfg, i, total).save(png)
-            segments.append((png, seconds, True))
+            segments.append(dict(png=png, seconds=seconds, zoom=True))
 
     clips = []
-    for j, (png, seconds, zoom) in enumerate(segments):
+    for j, seg in enumerate(segments):
         clip = workdir / f"clip_{j:02d}.mp4"
-        _still_clip(png, seconds, clip, zoom)
+        if seg.get("video"):
+            _video_clip(Path(seg["video"]), seg["start"], seg["png"], seg["seconds"], clip, seg["fit"])
+        else:
+            _still_clip(seg["png"], seg["seconds"], clip, seg["zoom"])
         clips.append(clip)
     concat_list = workdir / "clips.txt"
     concat_list.write_text("".join(f"file '{c.resolve()}'\n" for c in clips))
